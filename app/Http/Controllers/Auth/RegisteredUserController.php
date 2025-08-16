@@ -85,14 +85,20 @@ class RegisteredUserController extends Controller
      */
     private function generateCompanyCode(string $companyName): string
     {
-        $base = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $companyName), 0, 4));
+        // Generate base code from company name
+        $baseCode = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $companyName), 0, 3));
+        if (strlen($baseCode) < 3) {
+            $baseCode = str_pad($baseCode, 3, 'X');
+        }
+
+        // Add incrementing number
         $counter = 1;
-        
         do {
-            $code = $base . str_pad($counter, 3, '0', STR_PAD_LEFT);
+            $code = $baseCode . str_pad($counter, 3, '0', STR_PAD_LEFT);
+            $exists = Company::where('company_code', $code)->exists();
             $counter++;
-        } while (Company::where('company_code', $code)->exists());
-        
+        } while ($exists);
+
         return $code;
     }
 }

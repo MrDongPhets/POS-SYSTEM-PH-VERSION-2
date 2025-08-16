@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
 {
@@ -11,6 +13,8 @@ class Company extends Model
 
     /**
      * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'company_code',
@@ -42,59 +46,56 @@ class Company extends Model
     ];
 
     /**
-     * The attributes that should be cast.
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'trial_ends_at' => 'date',
-        'subscription_ends_at' => 'date',
-        'approved_at' => 'datetime',
-        'is_active' => 'boolean',
-        'is_approved' => 'boolean',
-        'current_store_count' => 'integer',
-        'current_user_count' => 'integer',
-        'max_stores' => 'integer',
-        'max_users' => 'integer',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'trial_ends_at' => 'date',
+            'subscription_ends_at' => 'date',
+            'approved_at' => 'datetime',
+            'is_active' => 'boolean',
+            'is_approved' => 'boolean',
+            'max_stores' => 'integer',
+            'max_users' => 'integer',
+            'current_store_count' => 'integer',
+            'current_user_count' => 'integer',
+        ];
+    }
 
     /**
-     * Users belonging to this company.
+     * Get the users for the company.
      */
-    public function users()
+    public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
     /**
-     * Stores belonging to this company.
+     * Get the stores for the company.
      */
-    public function stores()
+    public function stores(): HasMany
     {
         return $this->hasMany(Store::class);
     }
 
     /**
-     * System user who created this company.
+     * Get the system user who created this company.
      */
-    public function createdBy()
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(SystemUser::class, 'created_by');
     }
 
     /**
-     * System user who approved this company.
+     * Get the system user who approved this company.
      */
-    public function approvedBy()
+    public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(SystemUser::class, 'approved_by');
-    }
-
-    /**
-     * Subscription plan details.
-     */
-    public function subscriptionPlan()
-    {
-        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan', 'plan_code');
     }
 
     /**
@@ -102,7 +103,7 @@ class Company extends Model
      */
     public function isActive(): bool
     {
-        return $this->is_active;
+        return (bool) $this->is_active;
     }
 
     /**
@@ -110,50 +111,25 @@ class Company extends Model
      */
     public function isApproved(): bool
     {
-        return $this->is_approved;
+        return (bool) $this->is_approved;
     }
 
     /**
-     * Check if company is on trial.
-     */
-    public function isOnTrial(): bool
-    {
-        return $this->subscription_plan === 'trial' 
-            && $this->trial_ends_at 
-            && $this->trial_ends_at->isFuture();
-    }
-
-    /**
-     * Check if subscription is active.
+     * Check if company subscription is active.
      */
     public function hasActiveSubscription(): bool
     {
-        return $this->subscription_status === 'active' && 
-               ($this->subscription_ends_at === null || $this->subscription_ends_at->isFuture());
+        return $this->subscription_status === 'active';
     }
 
     /**
-     * Get main store.
+     * Check if company is in trial period.
      */
-    public function mainStore()
+    public function isInTrial(): bool
     {
-        return $this->stores()->where('is_main_store', true)->first();
-    }
-
-    /**
-     * Check if can add more stores.
-     */
-    public function canAddStore(): bool
-    {
-        return $this->current_store_count < $this->max_stores;
-    }
-
-    /**
-     * Check if can add more users.
-     */
-    public function canAddUser(): bool
-    {
-        return $this->current_user_count < $this->max_users;
+        return $this->subscription_plan === 'trial' && 
+               $this->trial_ends_at && 
+               $this->trial_ends_at->isFuture();
     }
 
     /**
@@ -170,5 +146,13 @@ class Company extends Model
     public function scopeApproved($query)
     {
         return $query->where('is_approved', true);
+    }
+
+    /**
+     * Scope to get pending approval companies.
+     */
+    public function scopePendingApproval($query)
+    {
+        return $query->where('is_approved', false);
     }
 }

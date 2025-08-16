@@ -18,7 +18,7 @@ class AdminAuthController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('auth/admin/login');
+        return Inertia::render('admin/login');
     }
 
     /**
@@ -54,12 +54,12 @@ class AdminAuthController extends Controller
             ]);
         }
 
-        // Update last login (simplified for now)
+        // Update last login
         DB::table('system_users')
             ->where('id', $admin->id)
             ->update(['last_login_at' => now()]);
 
-        return redirect()->intended('/admin/dashboard');
+        return redirect()->intended(route('admin.dashboard'));
     }
 
     /**
