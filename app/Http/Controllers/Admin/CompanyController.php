@@ -20,7 +20,18 @@ class CompanyController extends Controller
             ->withCount(['users'])
             ->orderBy('created_at', 'desc')
             ->paginate(10)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn ($company) => [
+                'id' => $company->id,
+                'company_name' => $company->company_name,
+                'email' => $company->email,
+                'phone' => $company->phone,
+                'subscription_plan' => $company->subscription_plan,
+                'is_active' => $company->is_active,
+                'is_approved' => $company->is_approved,
+                'users_count' => $company->users_count,
+                'created_at' => $company->created_at->toISOString(),
+            ]);
 
         return Inertia::render('admin/companies/index', [
             'companies' => $companies,
