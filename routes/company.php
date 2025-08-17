@@ -37,21 +37,21 @@ Route::middleware(['auth'])->prefix('company')->name('company.')->group(function
         // Dashboard
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         
-        // Store Management
-        Route::resource('stores', StoreController::class);
+        // // Store Management
+        // Route::resource('stores', StoreController::class);
         
-        // User/Staff Management  
-        Route::resource('users', UserController::class);
+        // // User/Staff Management  
+        // Route::resource('users', UserController::class);
         
-        // Product Management
-        Route::resource('products', ProductController::class);
+        // // Product Management
+        // Route::resource('products', ProductController::class);
         
-        // POS System
-        Route::prefix('pos')->name('pos.')->group(function () {
-            Route::get('/', [TransactionController::class, 'index'])->name('index');
-            Route::post('transactions', [TransactionController::class, 'store'])->name('transactions.store');
-            Route::get('transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
-        });
+        // // POS System
+        // Route::prefix('pos')->name('pos.')->group(function () {
+        //     Route::get('/', [TransactionController::class, 'index'])->name('index');
+        //     Route::post('transactions', [TransactionController::class, 'store'])->name('transactions.store');
+        //     Route::get('transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
+        // });
         
         // Reports
         Route::prefix('reports')->name('reports.')->group(function () {

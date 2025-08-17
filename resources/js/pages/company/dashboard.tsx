@@ -233,7 +233,9 @@ export default function CompanyDashboard() {
             <Card className="bg-blue-50 border-blue-200">
                 <CardContent className="pt-6">
                     <div className="flex items-center space-x-3">
-          
+                        {/* <div className="bg-blue-100 p-3 rounded-full">
+                            <Building2 className="h-6 w-6 text-blue-600" />
+                        </div> */}
                         <div className="flex-1">
                             <h2 className="text-xl font-semibold text-blue-900 mb-2">
                                 Welcome to Your POS System! 🎉

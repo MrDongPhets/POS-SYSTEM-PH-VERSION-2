@@ -74,7 +74,8 @@ class AuthenticatedSessionController extends Controller
         DB::table('users')->where('id', $user->id)->update(['last_login_at' => now()]);
 
         // Redirect based on user type
-        return $this->redirectUser($user, $request->intended());
+        $intended = redirect()->intended()->getTargetUrl();
+        return $this->redirectUser($user, $intended);
     }
 
     /**
