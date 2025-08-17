@@ -35,12 +35,9 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $user = Auth::user();
+        $user = Auth::user(); // Using Auth facade for better IDE support
 
-        // For now, let's simplify the validation to get basic login working
-        // We'll add back the company checks once we have the models properly set up
-        
-        // Simple check if user is active
+        // Check if user is active
         if (!$user->is_active) {
             Auth::logout();
             $request->session()->invalidate();
@@ -51,11 +48,76 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        // Update last login using DB query for now
+        // Check if user has company_id (company user)
+        if ($user->company_id) {
+            // Load company relationship
+            $user->load('company');
+            
+            // Check if company is approved
+            if ($user->company && !$user->company->is_approved) {
+                return redirect()->route('company.pending-approval');
+            }
+            
+            // Check if company is active
+            if ($user->company && !$user->company->is_active) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Your company account has been suspended. Please contact support.',
+                ]);
+            }
+        }
+
+        // Update last login
         DB::table('users')->where('id', $user->id)->update(['last_login_at' => now()]);
 
-        // Simple redirect to dashboard for now
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Redirect based on user type
+        return $this->redirectUser($user, $request->intended());
+    }
+
+    /**
+     * Redirect user based on their role and company status.
+     */
+    private function redirectUser(User $user, ?string $intended = null): RedirectResponse
+    {
+        // If there's an intended URL and it's safe, use it
+        if ($intended && $this->isIntendedUrlSafe($intended)) {
+            return redirect($intended);
+        }
+
+        // Company users go to company dashboard
+        if ($user->company_id) {
+            return redirect()->route('company.dashboard');
+        }
+
+        // Default users go to regular dashboard
+        return redirect()->route('dashboard');
+    }
+
+    /**
+     * Check if intended URL is safe to redirect to.
+     */
+    private function isIntendedUrlSafe(string $url): bool
+    {
+        // Don't redirect to logout, login, or external URLs
+        $unsafePatterns = [
+            '/logout',
+            '/login',
+            '/admin/login',
+            'http://',
+            'https://',
+            '//'
+        ];
+
+        foreach ($unsafePatterns as $pattern) {
+            if (str_contains($url, $pattern)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -70,17 +132,4 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
-
-    // We'll add this back later once models are properly set up
-    /*
-    private function redirectUser(User $user, ?string $intended = null): RedirectResponse
-    {
-        // Implementation here
-    }
-
-    private function isIntendedUrlSafe(string $url): bool 
-    {
-        // Implementation here  
-    }
-    */
 }
