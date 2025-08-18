@@ -39,6 +39,37 @@ export default function CompanyDashboard() {
     return (
         <CompanyLayout breadcrumbs={breadcrumbs}>
             <Head title="Company Dashboard" />
+
+                        {/* Welcome Message */}
+            <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="pt-6">
+                    <div className="flex items-center space-x-3">
+                        {/* <div className="bg-blue-100 p-3 rounded-full">
+                            <Building2 className="h-6 w-6 text-blue-600" />
+                        </div> */}
+                        <div className="flex-1">
+                            <h2 className="text-xl font-semibold text-blue-900 mb-2">
+                                Welcome to Your POS System! 🎉
+                            </h2>
+                            <p className="text-blue-700 mb-4">
+                                Your business account is active and ready. Start processing sales and managing your inventory.
+                            </p>
+                            <div className="flex space-x-3">
+                                <Button asChild>
+                                    <Link href="/company/pos">
+                                        Start Selling
+                                    </Link>
+                                </Button>
+                                <Button variant="outline" asChild>
+                                    <Link href="/company/settings">
+                                        Setup Store
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
             
             {/* Stats Overview */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -229,36 +260,7 @@ export default function CompanyDashboard() {
                 </Card>
             </div>
 
-            {/* Welcome Message */}
-            <Card className="bg-blue-50 border-blue-200">
-                <CardContent className="pt-6">
-                    <div className="flex items-center space-x-3">
-                        {/* <div className="bg-blue-100 p-3 rounded-full">
-                            <Building2 className="h-6 w-6 text-blue-600" />
-                        </div> */}
-                        <div className="flex-1">
-                            <h2 className="text-xl font-semibold text-blue-900 mb-2">
-                                Welcome to Your POS System! 🎉
-                            </h2>
-                            <p className="text-blue-700 mb-4">
-                                Your business account is active and ready. Start processing sales and managing your inventory.
-                            </p>
-                            <div className="flex space-x-3">
-                                <Button asChild>
-                                    <Link href="/company/pos">
-                                        Start Selling
-                                    </Link>
-                                </Button>
-                                <Button variant="outline" asChild>
-                                    <Link href="/company/settings">
-                                        Setup Store
-                                    </Link>
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+
         </CompanyLayout>
     );
 }
