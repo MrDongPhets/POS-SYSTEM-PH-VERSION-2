@@ -9,7 +9,7 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
+        'guard' => env('AUTH_GUARD', 'api'),  // Changed to api for JWT
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
@@ -25,7 +25,19 @@ return [
             'provider' => 'users',
         ],
 
-        // Super Admin / System Admin Guard
+        // JWT API Guard for Company Users
+        'api' => [
+            'driver' => 'jwt',
+            'provider' => 'users',
+        ],
+
+        // JWT Guard for Super Admin / System Admin
+        'admin-api' => [
+            'driver' => 'jwt',
+            'provider' => 'system_users',
+        ],
+
+        // Session-based Admin Guard (keep for web interface)
         'admin' => [
             'driver' => 'session',
             'provider' => 'system_users',

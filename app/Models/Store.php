@@ -4,107 +4,66 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Store extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
         'company_id',
         'store_code',
         'store_name',
         'address',
-        'city',
-        'province',
-        'postal_code',
-        'country',
         'phone',
         'email',
-        'manager_name',
-        'opening_time',
-        'closing_time',
-        'operating_days',
         'is_active',
-        'is_main_store',
-        'store_settings',
+        'settings',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
     protected $casts = [
-        'opening_time' => 'datetime:H:i',
-        'closing_time' => 'datetime:H:i',
-        'operating_days' => 'array',
-        'store_settings' => 'array',
         'is_active' => 'boolean',
-        'is_main_store' => 'boolean',
+        'settings' => 'array',
     ];
 
     /**
-     * Company that owns this store.
+     * Get the company that owns the store.
      */
-    public function company()
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
     /**
-     * Users assigned to this store.
+     * Get the users assigned to this store.
      */
-    public function users()
+    public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
     /**
-     * Check if store is active.
+     * Get the inventory for this store.
      */
-    public function isActive(): bool
+    public function inventory(): HasMany
     {
-        return $this->is_active;
+        return $this->hasMany(StoreInventory::class);
     }
 
     /**
-     * Check if this is the main store.
+     * Get the transactions for this store.
      */
-    public function isMainStore(): bool
+    public function transactions(): HasMany
     {
-        return $this->is_main_store;
+        return $this->hasMany(Transaction::class);
     }
 
     /**
-     * Scope to get only active stores.
+     * Scopes
      */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
-    }
-
-    /**
-     * Scope to get stores for a specific company.
-     */
-    public function scopeForCompany($query, int $companyId)
-    {
-        return $query->where('company_id', $companyId);
-    }
-
-    /**
-     * Get full address as string.
-     */
-    public function getFullAddressAttribute(): string
-    {
-        $parts = array_filter([
-            $this->address,
-            $this->city,
-            $this->province,
-            $this->postal_code,
-            $this->country,
-        ]);
-
-        return implode(', ', $parts);
     }
 }

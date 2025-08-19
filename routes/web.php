@@ -23,6 +23,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 });
 
+Route::get('/test-setup', function() {
+    return response()->json([
+        'laravel_version' => app()->version(),
+        'php_version' => PHP_VERSION,
+        'jwt_class_exists' => class_exists(\Tymon\JWTAuth\Facades\JWTAuth::class),
+        'api_routes_path' => base_path('routes/api.php'),
+        'api_routes_exists' => file_exists(base_path('routes/api.php')),
+    ]);
+});
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';

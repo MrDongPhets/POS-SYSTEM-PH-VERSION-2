@@ -1,85 +1,172 @@
-import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
+import React, { useState } from 'react';
+import { useForm } from '@inertiajs/react';
+import { AuthService } from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AuthLayout from '@/layouts/auth-layout';
-import { Form, Head } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, AlertCircle } from 'lucide-react';
 
-interface LoginProps {
-    status?: string;
-    canResetPassword: boolean;
-}
+export default function Login() {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    
+    const { data, setData } = useForm({
+        email: '',
+        password: '',
+        company_code: '',
+        remember: false,
+    });
 
-export default function Login({ status, canResetPassword }: LoginProps) {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await AuthService.login(
+                data.email,
+                data.password,
+                data.company_code || undefined
+            );
+
+            if (response.success) {
+                // Check if company is approved
+                if (response.company && !response.company.is_approved) {
+                    window.location.href = '/company/pending-approval';
+                } else {
+                    // Redirect to dashboard
+                    window.location.href = '/company/dashboard';
+                }
+            } else {
+                setError(response.message || 'Login failed');
+            }
+        } catch (err: any) {
+            if (err.response?.data?.message) {
+                setError(err.response.data.message);
+            } else if (err.response?.data?.errors) {
+                const firstError = Object.values(err.response.data.errors)[0];
+                setError(Array.isArray(firstError) ? firstError[0] : firstError as string);
+            } else {
+                setError('An error occurred during login. Please try again.');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
-        <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
-            <Head title="Log in" />
-
-            <Form method="post" action={route('login')} resetOnSuccess={['password']} className="flex flex-col gap-6">
-                {({ processing, errors }) => (
-                    <>
-                        <div className="grid gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    required
-                                    autoFocus
-                                    tabIndex={1}
-                                    autoComplete="email"
-                                    placeholder="email@example.com"
-                                />
-                                <InputError message={errors.email} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
-                                    {canResetPassword && (
-                                        <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
-                                            Forgot password?
-                                        </TextLink>
-                                    )}
-                                </div>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    name="password"
-                                    required
-                                    tabIndex={2}
-                                    autoComplete="current-password"
-                                    placeholder="Password"
-                                />
-                                <InputError message={errors.password} />
-                            </div>
-
-                            <div className="flex items-center space-x-3">
-                                <Checkbox id="remember" name="remember" tabIndex={3} />
-                                <Label htmlFor="remember">Remember me</Label>
-                            </div>
-
-                            <Button type="submit" className="mt-4 w-full" tabIndex={4} disabled={processing}>
-                                {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                                Log in
-                            </Button>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <Card className="w-full max-w-md">
+                <CardHeader className="space-y-1">
+                    <CardTitle className="text-2xl font-bold text-center">
+                        POS System Login
+                    </CardTitle>
+                    <CardDescription className="text-center">
+                        Enter your credentials to access your account
+                    </CardDescription>
+                </CardHeader>
+                
+                <form onSubmit={handleSubmit}>
+                    <CardContent className="space-y-4">
+                        {error && (
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="company_code">
+                                Company Code (Optional)
+                            </Label>
+                            <Input
+                                id="company_code"
+                                type="text"
+                                placeholder="Enter company code"
+                                value={data.company_code}
+                                onChange={(e) => setData('company_code', e.target.value)}
+                                disabled={isLoading}
+                            />
                         </div>
-
-                        <div className="text-center text-sm text-muted-foreground">
-                            Don't have an account?{' '}
-                            <TextLink href={route('register')} tabIndex={5}>
-                                Sign up
-                            </TextLink>
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="email">
+                                Email Address
+                            </Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="admin@company.com"
+                                value={data.email}
+                                onChange={(e) => setData('email', e.target.value)}
+                                disabled={isLoading}
+                                required
+                            />
                         </div>
-                    </>
-                )}
-            </Form>
-
-            {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
-        </AuthLayout>
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="password">
+                                Password
+                            </Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                placeholder="Enter your password"
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
+                                disabled={isLoading}
+                                required
+                            />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <input
+                                    id="remember"
+                                    type="checkbox"
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    checked={data.remember}
+                                    onChange={(e) => setData('remember', e.target.checked)}
+                                    disabled={isLoading}
+                                />
+                                <Label htmlFor="remember" className="ml-2 text-sm">
+                                    Remember me
+                                </Label>
+                            </div>
+                            
+                            <a href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
+                                Forgot password?
+                            </a>
+                        </div>
+                    </CardContent>
+                    
+                    <CardFooter className="flex flex-col space-y-4">
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Signing in...
+                                </>
+                            ) : (
+                                'Sign In'
+                            )}
+                        </Button>
+                        
+                        <div className="text-center text-sm">
+                            <span className="text-gray-600">Don't have an account? </span>
+                            <a href="/register" className="text-blue-600 hover:text-blue-500 font-medium">
+                                Register your company
+                            </a>
+                        </div>
+                    </CardFooter>
+                </form>
+            </Card>
+        </div>
     );
 }
